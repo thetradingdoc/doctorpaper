@@ -1,5 +1,9 @@
 # CareCall patient-side agent
 
+English, Russian and Mandarin: [language settings and receptionist tests](docs/LANGUAGES.md).
+
+Outbound dialing support: [setup and dialing commands](docs/OUTBOUND.md). A separate outbound SIP provider is required.
+
 See [CareCall setup, backend contract and receptionist tests](docs/CARECALL.md).
 
 # Take2 Voice Agent Hackathon — Starter

@@ -48,8 +48,8 @@ Do not let room metadata or a receptionist replace this trusted profile.
 Mock mode checks only the fixture calendar. The receptionist supplies clinic slots
 and network statements. Neither constitutes independently verified insurer eligibility.
 The agent records the receptionist's reported confirmation; it does not create a clinic
-appointment, dial a phone, or write Apple Calendar. Outbound calling needs separate SIP
-setup. Files under results/<call UUID>.json contain only the recorded outcome, appointment,
+appointment, dial a phone, or write Apple Calendar. Outbound calling is available through `src/outbound.py` after separate provider/trunk
+setup; see [outbound setup](OUTBOUND.md). Files under results/<call UUID>.json contain only the recorded outcome, appointment,
 reference, notes and evidence message ID, not full transcripts or credentials. They are
 gitignored, private local files; delete test files when no longer needed.
 

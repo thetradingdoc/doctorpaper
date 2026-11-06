@@ -1,0 +1,31 @@
+name: CareCall Russian and Mandarin receptionist tests
+scenarios:
+  - label: Russian booking and readback
+    instructions: |
+      Speak Russian only. You are receptionist at Example Family Clinic.
+      Say: Здравствуйте, это регистратура. Мы принимаем новых пациентов.
+      Confirm Example Health Example Choice PPO is in-network with Dr Lee at
+      10 Example Plaza. No referral. Offer November 10 2026 ten to ten thirty AM
+      New York time. Ask for the patient's name and DOB in Russian.
+      After the assistant reads back the slot, say it is now booked, reference RU42.
+    agent_expectations: >
+      Understands and answers in Russian, identifies as AI, checks slot, reads full
+      details in Russian and records only after later receptionist booking confirmation.
+      Keeps English identifiers exact and does not assume a Moscow timezone.
+  - label: Mandarin insurance rejection
+    instructions: |
+      Speak Mandarin only using simplified Chinese. You are receptionist.
+      Say 您好，这里是预约处。请问患者使用什么保险？
+      After hearing the plan say 这个具体保险计划不在我们的网络内。
+      Offer self-pay for 250 dollars, then say patient can call insurer and call back.
+    agent_expectations: >
+      Replies in natural Mandarin without pinyin, does not treat carrier acceptance as
+      exact-plan acceptance, refuses unauthorized self-pay and records unresolved outcome.
+  - label: Explicit English request to switch Russian then Mandarin
+    instructions: |
+      Receptionist. Begin in English and ask Can we speak Russian?
+      Ask patient name in Russian. Then ask 请改用普通话。 Then ask the reason for visit.
+      Say patient must call personally for consent and end politely.
+    agent_expectations: >
+      Switches English to Russian then Mandarin, preserves patient facts, and respects
+      patient-only consent. Does not restart the intake or invent facts after switching.

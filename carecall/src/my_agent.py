@@ -2,15 +2,21 @@
 
 import json
 import logging
-from datetime import datetime
 from typing import Literal
-from zoneinfo import ZoneInfo
 
 import aiohttp
-from livekit.agents import Agent, RunContext, StopResponse, ToolError, function_tool
+from livekit.agents import (
+    Agent,
+    RunContext,
+    StopResponse,
+    ToolError,
+    function_tool,
+    stt,
+)
 from livekit.agents.beta.tools import EndCallTool
 
 from carecall import Backend, CallState, load_profile
+from carecall_languages import SUPPORTED, appointment_readback, initial_language, phrase
 from prompts import build_instructions
 
 logger = logging.getLogger("carecall")
@@ -65,11 +71,20 @@ Before ending, record the result, summarize briefly, say goodbye and use end_cal
 
 class MyAgent(Agent):
     def __init__(self):
+        self.language = initial_language()
         self.state = CallState(load_profile())
         self.backend = Backend()
         super().__init__(
             instructions=build_instructions(
                 JOB_PROMPT
+                + f"\nInitial reply language: {SUPPORTED[self.language]}. "
+                + "Speak English, Russian or Mandarin Chinese to match the receptionist. "
+                + "Switch immediately when asked; call set_language if the requested reply language changes. "
+                + "If the receptionist speaks Russian or Mandarin, reply in that language without asking them to use English. "
+                + "Use native Cyrillic or simplified Chinese, not romanization. "
+                + "Keep names, member IDs, references and addresses exactly as supplied; do not translate or invent identifiers. "
+                + "Clarify ambiguous dates and time zones; save ISO dates and offsets regardless of spoken language. "
+                + "Apply every authorization and confirmation rule in all three languages. "
                 + "\nTrusted patient profile:\n"
                 + json.dumps(self.state.profile)
             ),
@@ -99,11 +114,44 @@ class MyAgent(Agent):
             ):
                 event.cancel_tool_reply()
 
-        name = self.state.profile["name"]
+        self._select_language(self.language)
         await self.session.say(
-            f"Hi, I'm CareCall, an AI assistant calling for {name}. "
-            "Am I speaking with the appointment desk?"
+            phrase(self.language, "greeting", name=self.state.profile["name"])
         )
+
+    def _select_language(self, language: str):
+        self.language = language
+        # Supported public inference TTS update; recognition stays multilingual.
+        if self.session.tts is not None:
+            self.session.tts.update_options(language=language)
+
+    async def stt_node(self, audio, model_settings):
+        async for event in Agent.default.stt_node(self, audio, model_settings):
+            if (
+                event.type == stt.SpeechEventType.FINAL_TRANSCRIPT
+                and event.alternatives
+            ):
+                data = event.alternatives[0]
+                # Use provider language metadata, never keyword/intent matching.
+                language = str(data.language).lower().split("-")[0]
+                if language == "cmn":
+                    language = "zh"
+                if (
+                    data.text.strip()
+                    and language in SUPPORTED
+                    and language != self.language
+                ):
+                    self._select_language(language)
+            yield event
+
+    @function_tool
+    async def set_language(self, language: Literal["en", "ru", "zh"]) -> dict:
+        """Change spoken language when receptionist asks, including an English request to speak Russian or Mandarin. en=English, ru=Russian, zh=Mandarin. Preserve all appointment state."""
+        self._select_language(language)
+        return {
+            "language": language,
+            "next": "continue the same conversation in this language",
+        }
 
     def _require_open(self):
         if self.state.result:
@@ -116,7 +164,7 @@ class MyAgent(Agent):
         self.state.on_hold = holding
         if holding:
             if not was_holding:
-                await self.session.say("Of course, I'll hold.")
+                await self.session.say(phrase(self.language, "hold"))
             # Do not let the tool loop generate another acknowledgement.
             raise StopResponse()
         return {"on_hold": False, "next": "resume from existing facts"}
@@ -184,17 +232,7 @@ class MyAgent(Agent):
         c = dict(s.candidate)
         review_message = s.latest_message
         s.reviewed_message = None
-        start = datetime.fromisoformat(c["start"]).astimezone(
-            ZoneInfo(s.profile["timezone"])
-        )
-        end = datetime.fromisoformat(c["end"]).astimezone(
-            ZoneInfo(s.profile["timezone"])
-        )
-        spoken = start.strftime("%A, %B %d, %Y at %I:%M %p")
-        until = end.strftime("%I:%M %p %Z")
-        speech = self.session.say(
-            f"To confirm, this is for {s.profile['name']}, {spoken} to {until}, with {c['provider']} at {c['location']}. Is that appointment now booked?"
-        )
+        speech = self.session.say(appointment_readback(s.profile, c, self.language))
         await speech.wait_for_playout()
         if speech.interrupted or s.candidate != c or s.insurance != "in_network":
             s.reviewed_message = None

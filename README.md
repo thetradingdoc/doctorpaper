@@ -90,7 +90,8 @@ lk agent console --input-device "MacBook Pro Microphone" --output-device "MacBoo
 ```
 
 No credentials, generated call results, or local environments are included. CareCall
-defaults to a mock calendar and local result files; it does not dial phone numbers.
+defaults to a mock calendar and local result files. Outbound dialing is implemented
+but requires a separately configured SIP provider; see [outbound setup](carecall/docs/OUTBOUND.md).
 Its optional HTTP contract (`/calendar/check`, `/call-results`) is **not yet connected**
 to DoctorPaper's `/api/appointments/.../events` contract. A backend adapter is still
 required; copying the agent here does not automatically dispatch dashboard requests

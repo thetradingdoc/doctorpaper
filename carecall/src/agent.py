@@ -29,8 +29,10 @@ from livekit.agents import (
 from livekit.plugins import ai_coustics
 
 from booking_agent import BookingAgent
+from carecall_languages import phrase
 from models import load_models
 from my_agent import MyAgent
+from outbound import prepare_outbound
 from screener_agent import ScreenerAgent
 
 logger = logging.getLogger("agent")
@@ -74,9 +76,9 @@ def handle_silence(session: AgentSession) -> None:
             return
         check_ins += 1
         if check_ins <= MAX_CHECK_INS:
-            await session.say("Are you still there?")
+            await session.say(phrase(getattr(agent, "language", "en"), "check_in"))
         else:
-            await session.say("I'll let you go. Thanks, goodbye.")
+            await session.say(phrase(getattr(agent, "language", "en"), "goodbye"))
             session.shutdown()
 
     @session.on("user_state_changed")
@@ -103,6 +105,25 @@ server = AgentServer()
 @server.rtc_session(agent_name=AGENT_NAME)
 async def entrypoint(ctx: JobContext) -> None:
     ctx.log_context_fields = {"room": ctx.room.name}
+    try:
+        callee_identity = await prepare_outbound(ctx)
+    except asyncio.CancelledError:
+        try:
+            await ctx.delete_room()
+        finally:
+            ctx.shutdown(reason="outbound_cancelled")
+        raise
+    except Exception as exc:
+        # Do not print provider responses or phone numbers in application logs.
+        logger.error("call_failed category=%s; no automatic retry", type(exc).__name__)
+        try:
+            await ctx.delete_room()
+        finally:
+            ctx.shutdown(reason="outbound_call_failed")
+        return
+    if callee_identity:
+        logger.info("call_connected room=%s", ctx.room.name)
+
     models = load_models()
 
     session = AgentSession(
@@ -152,6 +173,7 @@ async def entrypoint(ctx: JobContext) -> None:
         agent=pick_agent(),
         room=ctx.room,
         room_options=room_io.RoomOptions(
+            **({"participant_identity": callee_identity} if callee_identity else {}),
             audio_input=room_io.AudioInputOptions(
                 # Removes background noise and other voices before STT hears it.
                 noise_cancellation=ai_coustics.audio_enhancement(

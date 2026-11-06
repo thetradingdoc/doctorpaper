@@ -29,21 +29,26 @@ class Models:
     expressive: bool
 
 
+def multilingual_stt() -> inference.STT:
+    """Same working model and endpointing; omit English lock for code-switching."""
+    return inference.STT(
+        model="assemblyai/universal-3-6-pro",
+        extra_kwargs={
+            "language_detection": True,
+            "mode": "balanced",
+            "voice_focus": "far-field",
+            "voice_focus_threshold": 0.7,
+            "vad_threshold": 0.6,
+            "min_turn_silence": 300,
+            "max_turn_silence": 1000,
+        },
+    )
+
+
 def budget() -> Models:
-    """LiveKit's starter defaults. Cheapest, and good enough to win with."""
+    """Existing voice and brain, with English/Russian/Mandarin recognition."""
     return Models(
-        stt=inference.STT(
-            model="assemblyai/universal-3-6-pro",
-            language="en",
-            extra_kwargs={
-                "mode": "balanced",
-                "voice_focus": "far-field",
-                "voice_focus_threshold": 0.7,
-                "vad_threshold": 0.6,
-                "min_turn_silence": 300,
-                "max_turn_silence": 1000,
-            },
-        ),
+        stt=multilingual_stt(),
         llm=inference.LLM(model="google/gemma-4-31b-it"),
         tts=inference.TTS(
             model="fishaudio/s2.1-pro", voice="fa4c9eb3dccc4806b382b40d61c6b10a"
@@ -53,9 +58,9 @@ def budget() -> Models:
 
 
 def quality() -> Models:
-    """Deepgram + Gemini + Cartesia. About twice the cost of `budget`."""
+    """Multilingual AssemblyAI + existing Gemini and Cartesia voice."""
     return Models(
-        stt=inference.STT(model="deepgram/nova-3", language="en"),
+        stt=multilingual_stt(),
         llm=inference.LLM(model="google/gemini-3.1-flash-lite"),
         tts=inference.TTS(
             model="cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
