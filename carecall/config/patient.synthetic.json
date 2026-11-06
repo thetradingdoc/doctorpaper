@@ -1,0 +1,20 @@
+{
+  "id": "synthetic-alex-morgan",
+  "synthetic": true,
+  "name": "Alex Morgan",
+  "dob": "1990-04-17",
+  "phone": "+1-202-555-0142",
+  "email": "alex.morgan@example.com",
+  "address": "123 Example Lane, New York, NY 10001",
+  "new_patient": true,
+  "visit_reason": "routine primary care annual checkup; no urgent symptoms reported",
+  "specialty": "primary care",
+  "preferred_clinic": "Example Family Clinic",
+  "timezone": "America/New_York",
+  "date_window": ["2026-11-09", "2026-11-20"],
+  "insurance": {"carrier": "Example Health", "plan": "Example Choice PPO", "network": "Choice PPO", "member_id": "SYNTHETIC12345", "group": "DEMO100", "policyholder": "self"},
+  "referral": "unknown",
+  "accessibility": "none requested",
+  "authorization": {"book_routine_visit": true, "require_in_network": true, "allow_self_pay": false, "allow_payment": false, "allow_cancellation": false},
+  "busy": [["2026-11-10T13:00:00-05:00", "2026-11-10T15:00:00-05:00"]]
+}

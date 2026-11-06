@@ -73,3 +73,25 @@ The tests exercise extracted field parsing, the reviewed-data gate and booking e
 ## Roadmap before any real clinical deployment
 
 Patient sign-in; per-user access control; HTTPS; encryption at rest; secure secrets; EHR OAuth consent; audit logging; retention/deletion policies; malware scanning and document lifecycle; regulated-data processing agreements; real provider scheduling confirmation; patient verification and safety escalation; accessibility and device QA.
+
+## CareCall LiveKit voice agent
+
+The patient-side voice agent lives in [`carecall/`](carecall/README.md). It preserves
+the existing speech models and includes noisy-room STT endpointing, interruption/hold
+handling, a synthetic patient profile, calendar checks, guarded booking result recording,
+and receptionist roleplay scenarios. See [setup and backend contract](carecall/docs/CARECALL.md).
+
+```sh
+cd carecall
+uv sync
+cp .env.example .env.local
+# Fill in your LiveKit credentials locally; AGENT_PROFILE is already mine.
+lk agent console --input-device "MacBook Pro Microphone" --output-device "MacBook Pro Speakers"
+```
+
+No credentials, generated call results, or local environments are included. CareCall
+defaults to a mock calendar and local result files; it does not dial phone numbers.
+Its optional HTTP contract (`/calendar/check`, `/call-results`) is **not yet connected**
+to DoctorPaper's `/api/appointments/.../events` contract. A backend adapter is still
+required; copying the agent here does not automatically dispatch dashboard requests
+or update their timeline. Use synthetic data for the demo.

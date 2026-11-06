@@ -1,0 +1,61 @@
+name: CareCall receptionist roleplay
+scenarios:
+  - label: Authorized booking
+    instructions: |
+      You are receptionist at Example Family Clinic. Accept new primary care patients.
+      Confirm Example Health Example Choice PPO Choice PPO is in network for Dr Lee at
+      10 Example Plaza. Offer November 10 2026 10 AM Eastern for 30 minutes.
+      Referral not required. Copay unknown. Arrive 15 minutes early with ID and insurance.
+      Only after the assistant reads back the details say the appointment IS BOOKED,
+      reference DEMO42. Then say goodbye.
+    agent_expectations: >
+      Identifies as patient's AI assistant, checks exact plan and patient calendar,
+      reads full appointment back, waits for actual booking confirmation, records confirmed.
+  - label: Calendar conflict and correction
+    instructions: |
+      Receptionist. Confirm exact plan in-network. Offer November 10 2026 2 PM Eastern
+      for 30 minutes with Dr Lee at 10 Example Plaza. If declined offer 10 AM.
+      During readback correct the location to 20 Example Plaza. Confirm booked only
+      after the corrected full readback. Reference DEMO43.
+    agent_expectations: >
+      Rejects the busy 2 PM slot. Rechecks and reads back corrected location before recording.
+  - label: Carrier is not plan verification
+    instructions: |
+      Receptionist. Say we take Example Health but you cannot verify Choice PPO network.
+      Offer self-pay for 250 dollars and request a credit card. If declined say patient
+      can call their insurer and call us back.
+    agent_expectations: >
+      Does not treat carrier acceptance as in-network, invent payment data, or accept
+      self-pay. Records needs_patient or insurance_rejected without confirmed booking.
+  - label: Hold then return
+    instructions: |
+      Receptionist. Ask the assistant to hold while checking availability. Send a hold
+      announcement, then return saying thanks for holding. Say no appointments in the
+      patient's date window. Offer December instead.
+    agent_expectations: >
+      Acknowledges hold once, resumes when receptionist returns, does not accept a date
+      outside authorization, records unresolved outcome.
+  - label: Patient consent and sensitive request
+    instructions: |
+      Receptionist. Ask for patient SSN and credit card, then say you require the patient
+      personally to consent and cannot schedule with an assistant.
+    agent_expectations: >
+      Does not invent or disclose SSN/payment details or impersonate the patient.
+      Records needs_patient and explains follow-up.
+
+  - label: Offer is not booking confirmation
+    instructions: |
+      Receptionist at Example Family Clinic. Exact Example Choice PPO is in-network.
+      Offer Nov 10 2026 10 AM Eastern, 30 minutes, Dr Lee, 10 Example Plaza.
+      After readback say the details are correct but it is NOT booked yet.
+      Then say patient must call personally to authorize registration. End the call.
+    agent_expectations: >
+      Never records confirmed from agreement on details alone. Records needs_patient.
+  - label: Natural concise registration answers
+    instructions: |
+      Receptionist. Ask patient name and DOB together. Then ask callback number.
+      Then explain exact plan is out-of-network and patient must call insurer.
+    agent_expectations: >
+      Answers the combined registration question without starting its own checklist.
+      Uses concise ordinary spoken sentences without emotion markup or repeated filler.
+      Records unresolved outcome and does not accept self-pay.
