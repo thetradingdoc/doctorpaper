@@ -1,4 +1,20 @@
+![DoctorPaper — The Problem: finding the X-ray report from Dr Fred's clinic](docs/images/doctorpaper-problem.png)
+
 # DoctorPaper — your care, in order
+
+## The problem
+
+**Do you remember where you put that X-ray report from Dr Fred's clinic?**
+
+*Managing medical records shouldn't feel like a scavenger hunt.*
+
+Records get scattered across paper folders, email attachments, clinic portals, prescriptions, imaging reports, lab results, and insurance documents. Finding one X-ray report shouldn't require searching everywhere, and getting care shouldn't mean repeating the same details on every call.
+
+**Our vision:** DoctorPaper puts patient-reviewed documents in one place and connects them to a voice-assisted appointment experience: ask Siri to book a visit, let a LiveKit agent contact the front desk, follow the call's progress, review the proposed slot, and add a provider-confirmed appointment to your calendar.
+
+**Hackathon status:** Document uploads, record review, an appointment tracker, and CareCall outbound-calling code exist. The full Siri-to-call-to-approval-to-calendar workflow is still being integrated. The demo uses synthetic patient information.
+
+---
 
 A responsive medical paperwork and appointment-tracking **hackathon prototype**, inspired by the supplied DoctorPaper camera UI and problem slide. The frontend is vanilla HTML/CSS/JS (no build dependencies); the optional local Python server provides document OCR, SQLite state, and a simple integration contract for the LiveKit voice agent.
 
